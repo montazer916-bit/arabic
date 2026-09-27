@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>يوم على البحر - منهج تفاعلي</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #e0f7fa 0%, #b2ebf2 40%, #ffe082 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 750px;
+            width: 100%;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            padding: 25px;
+            border: 2px solid #fff;
+            transition: all 0.3s;
+        }
+        h1, h2 { color: #006064; text-align: center; }
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #00838f;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+            margin: 5px;
+        }
+        button:hover { background: #006064; transform: translateY(-2px); }
+        button:disabled { background: #bdbdbd; cursor: not-allowed; transform: none; }
+        .story-text {
+            background: #fffef5;
+            padding: 20px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            line-height: 2;
+            border: 2px dashed #0097a7;
+            min-height: 150px;
+            white-space: pre-wrap;
+            text-align: justify;
+            margin: 15px 0;
+        }
+        .speak-btn {
+            background: #ffb300;
+            font-size: 0.9rem;
+            padding: 8px 20px;
+            margin: 5px;
+        }
+        .vocab-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .flashcard {
+            width: 130px;
+            height: 150px;
+            perspective: 800px;
+            cursor: pointer;
+        }
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+            border-radius: 15px;
+        }
+        .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+            padding: 10px;
+            text-align: center;
+        }
+        .front { background: #ffecb3; color: #006064; border: 2px solid #ffca28; }
+        .back { background: #b2dfdb; color: #004d40; transform: rotateY(180deg); border: 2px solid #00796b; }
+        .fill-input {
+            width: 100px;
+            padding: 10px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            border: 2px solid #00838f;
+            text-align: center;
+            margin: 0 5px;
+        }
+        .quiz-option {
+            display: block;
+            background: #e0f2f1;
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 2px solid transparent;
+        }
+        .quiz-option:hover { background: #b2dfdb; }
+        .quiz-option.selected { background: #ffe082; border-color: #ffb300; }
+        .beach-area {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect y="100" width="400" height="100" fill="%23ffecb3"/><rect y="130" width="400" height="70" fill="%23e0c97f"/><rect y="60" width="400" height="40" fill="%230288d1"/><rect y="0" width="400" height="60" fill="%2300b0ff"/><circle cx="180" cy="30" r="25" fill="%23fff176"/></svg>') no-repeat center/cover;
+            border-radius: 25px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 3px solid #fff;
+        }
+        .trash {
+            position: absolute;
+            font-size: 35px;
+            cursor: grab;
+            user-select: none;
+            transition: 0.1s;
+        }
+        .trash:active { cursor: grabbing; }
+        .bin {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 55px;
+            background: #004d40;
+            padding: 15px;
+            border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+        .clean-message { color: #004d40; font-weight: bold; text-align: center; margin-top: 10px; }
+        .score { font-size: 1.5rem; color: #d84315; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+    <!-- الصفحة الرئيسية -->
+    <div class="section active" id="home">
+        <h1>🏖️ يوم على البحر</h1>
+        <p style="text-align:center; font-size:1.2rem;">منهج تفاعلي للمبتدئين</p>
+        <div style="text-align:center; margin:30px 0;">
+            <button onclick="showSection('story')">📖 ابدأ القصة</button>
+        </div>
+    </div>
+
+    <!-- قسم القصة التفاعلية -->
+    <div class="section" id="story">
+        <h2>📖 استمع واقرأ</h2>
+        <div class="story-text" id="storyDisplay"></div>
+        <div style="display:flex; justify-content:center; gap:10px;">
+            <button class="speak-btn" onclick="speakCurrentSentence()">🔊 اسمع الجملة</button>
+            <button id="nextStoryBtn" onclick="nextStorySentence()">التالي ←</button>
+        </div>
+        <div class="nav-buttons">
+            <button onclick="showSection('vocab')">🃏 المفردات</button>
+        </div>
+    </div>
+
+    <!-- قسم المفردات (بطاقات) -->
+    <div class="section" id="vocab">
+        <h2>🃏 بطاقات المفردات (اضغط للقلب)</h2>
+        <div class="vocab-grid" id="vocabContainer"></div>
+        <div class="nav-buttons">
+            <button onclick="showSection('fillBlank')">✍️ تمرين إكمال</button>
+        </div>
+    </div>
+
+    <!-- تمرين إكمال الفراغات -->
+    <div class="section" id="fillBlank">
+        <h2>✍️ أكمل الفراغ</h2>
+        <div id="fillQuestions" style="font-size:1.3rem; line-height:2.2;"></div>
+        <div class="nav-buttons">
+            <button onclick="checkFillAnswers()">✅ تحقق من الإجابات</button>
+            <button onclick="showSection('quiz')">❓ اختبار</button>
+        </div>
+        <p id="fillFeedback" style="text-align:center; margin-top:10px; font-weight:bold;"></p>
+    </div>
+
+    <!-- اختبار الاختيارات -->
+    <div class="section" id="quiz">
+        <h2>❓ اختبر فهمك</h2>
+        <div id="quizContainer"></div>
+        <button onclick="checkQuiz()">📊 تصحيح الاختبار</button>
+        <p class="score" id="quizScore"></p>
+        <div class="nav-buttons">
+            <button onclick="showSection('game')">🧹 لعبة نظف الشاطئ</button>
+        </div>
+    </div>
+
+    <!-- لعبة تنظيف الشاطئ -->
+    <div class="section" id="game">
+        <h2>🧹 اسحب النفايات إلى السلة</h2>
+        <div class="beach-area" id="beachGame">
+            <div class="bin" id="bin">🗑️</div>
+        </div>
+        <p class="clean-message" id="cleanMsg"></p>
+        <button onclick="resetGame()">🔄 أعد اللعبة</button>
+        <div class="nav-buttons">
+            <button onclick="showSection('home')">🏠 العودة للبداية</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- البيانات ----------
+    const sentences = [
+        "اليوم جوّ حار جداً. عائلة السيد نصوح تذهب إلى البحر.",
+        "الأطفال فرحان جداً! 😊 يصلون إلى الشاطئ الأول.",
+        "لكن... الشاطئ قذر جداً. فيه أوساخ كثيرة.",
+        "الأطفال حزين. لا يستطيعون السباحة هنا. 😟",
+        "تذهب العائلة إلى شاطئ آخر. الشاطئ الثاني ذهبي وجميل.",
+        "الأب يسأل عاملاً: 'مرحباً، هل نستطيع السباحة هنا؟'",
+        "العامل يقول: 'لا، نحن نبني هنا فندقاً كبيراً.'",
+        "الأطفال حزين جداً. 😭 الآن الأطفال جائعون.",
+        "العائلة تذهب إلى مطعم بحري. الأب يطلب: 'سمكاً طازجاً من فضلك.'",
+        "النادل يقول: 'آسف، لا يوجد سمك.' الأم تسأل: 'لماذا؟'",
+        "النادل يقول: 'البحر قذر. السمك مات.'",
+        "العائلة حزينة. يعودون إلى البيت. 🥺",
+        "البحر ليس مكاناً للأوساخ. البحر مكان جميل للسباحة والسمك."
+    ];
+    let currentSentence = 0;
+
+    const vocab = [
+        { word: "شاطئ", meaning: "شطّ البحر، مكان الرمل" },
+        { word: "قذر", meaning: "ليس نظيفاً، فيه أوساخ" },
+        { word: "نظيف", meaning: "جميل، بدون أوساخ" },
+        { word: "يبني", meaning: "يعمل بناءً (بيت، فندق)" },
+        { word: "سمك", meaning: "حيوان يعيش في الماء" },
+        { word: "حزين", meaning: "ليس فرحاناً" }
+    ];
+
+    // ---------- التنقل بين الأقسام ----------
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if (id === 'story') { currentSentence = 0; updateStoryDisplay(); }
+        if (id === 'vocab') buildVocabCards();
+        if (id === 'fillBlank') buildFillBlanks();
+        if (id === 'quiz') buildQuiz();
+        if (id === 'game') resetGame();
+    }
+
+    // ---------- القصة ----------
+    function updateStoryDisplay() {
+        const display = document.getElementById('storyDisplay');
+        display.innerHTML = sentences.slice(0, currentSentence+1).join('<br><br>');
+        document.getElementById('nextStoryBtn').disabled = currentSentence >= sentences.length-1;
+    }
+    function nextStorySentence() {
+        if (currentSentence < sentences.length-1) {
+            currentSentence++;
+            updateStoryDisplay();
+        }
+    }
+    function speakCurrentSentence() {
+        if ('speechSynthesis' in window) {
+            const utter = new SpeechSynthesisUtterance(sentences[currentSentence]);
+            utter.lang = 'ar-SA';
+            utter.rate = 0.9;
+            speechSynthesis.cancel();
+            speechSynthesis.speak(utter);
+        } else alert("متصفحك لا يدعم النطق الصوتي.");
+    }
+
+    // ---------- بطاقات المفردات ----------
+    function buildVocabCards() {
+        const container = document.getElementById('vocabContainer');
+        container.innerHTML = vocab.map((v, i) => `
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+                <div class="flashcard-inner">
+                    <div class="front">${v.word}</div>
+                    <div class="back">${v.meaning}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ---------- إكمال الفراغات ----------
+    const fillSentences = [
+        { text: "العائلة تذهب إلى ______.", answer: "الشاطئ" },
+        { text: "الشاطئ الأول ______ جداً.", answer: "قذر" },
+        { text: "لا يوجد ______ في المطعم.", answer: "سمك" },
+        { text: "الأطفال ______ جداً.", answer: "حزين" }
+    ];
+    function buildFillBlanks() {
+        const container = document.getElementById('fillQuestions');
+        container.innerHTML = fillSentences.map((s, idx) => 
+            `<p>${s.text.replace('______', `<input type="text" class="fill-input" id="fill${idx}" placeholder="...">`)}</p>`
+        ).join('');
+        document.getElementById('fillFeedback').innerText = '';
+    }
+    function checkFillAnswers() {
+        let correct = 0;
+        fillSentences.forEach((s, idx) => {
+            const input = document.getElementById('fill'+idx);
+            if (input.value.trim().replace(/ /g,'') === s.answer.replace(/ /g,'')) {
+                input.style.background = '#c8e6c9';
+                correct++;
+            } else {
+                input.style.background = '#ffcdd2';
+            }
+        });
+        document.getElementById('fillFeedback').innerText = `أحسنت! ${correct}/${fillSentences.length} صحيحة`;
+    }
+
+    // ---------- الاختبار ----------
+    const quizData = [
+        { q: "أين تذهب العائلة؟", opts: ["الجبل", "البحر", "الحديقة"], ans: 1 },
+        { q: "الشاطئ الأول...", opts: ["نظيف", "قذر"], ans: 1 },
+        { q: "ماذا يفعل العمال على الشاطئ الثاني؟", opts: ["يسبحون", "يبنون", "يأكلون"], ans: 1 },
+        { q: "لماذا لا يوجد سمك؟", opts: ["البحر نظيف", "البحر قذر", "المطعم مغلق"], ans: 1 }
+    ];
+    let userAnswers = [];
+    function buildQuiz() {
+        const container = document.getElementById('quizContainer');
+        container.innerHTML = quizData.map((q, qi) => `
+            <div style="margin:20px 0;">
+                <p><strong>${qi+1}. ${q.q}</strong></p>
+                ${q.opts.map((opt, oi) => `
+                    <div class="quiz-option" id="opt_${qi}_${oi}" onclick="selectQuizOption(${qi}, ${oi})">${opt}</div>
+                `).join('')}
+            </div>
+        `).join('');
+        userAnswers = new Array(quizData.length).fill(-1);
+        document.getElementById('quizScore').innerText = '';
+    }
+    function selectQuizOption(qIndex, oIndex) {
+        const opts = document.querySelectorAll(`[id^="opt_${qIndex}_"]`);
+        opts.forEach(o => o.classList.remove('selected'));
+        document.getElementById(`opt_${qIndex}_${oIndex}`).classList.add('selected');
+        userAnswers[qIndex] = oIndex;
+    }
+    function checkQuiz() {
+        let score = 0;
+        quizData.forEach((q, i) => { if (userAnswers[i] === q.ans) score++; });
+        document.getElementById('quizScore').innerText = `نتيجتك: ${score} / ${quizData.length}`;
+    }
+
+    // ---------- لعبة تنظيف الشاطئ ----------
+    const trashItems = ["🧃", "🥤", "🧴", "🛍️", "🧃", "🥤"];
+    function resetGame() {
+        const beach = document.getElementById('beachGame');
+        // إزالة النفايات القديمة
+        beach.querySelectorAll('.trash').forEach(el => el.remove());
+        document.getElementById('cleanMsg').innerText = '';
+        trashItems.forEach((emoji, i) => {
+            const el = document.createElement('div');
+            el.className = 'trash';
+            el.textContent = emoji;
+            el.draggable = true;
+            el.style.top = (20 + Math.random()*180) + 'px';
+            el.style.left = (20 + Math.random()*250) + 'px';
+            el.addEventListener('dragstart', dragStart);
+            beach.appendChild(el);
+        });
+        const bin = document.getElementById('bin');
+        bin.addEventListener('dragover', e => e.preventDefault());
+        bin.addEventListener('drop', dropTrash);
+    }
+    function dragStart(e) {
+        e.dataTransfer.setData('text/plain', e.target.outerHTML);
+        e.target.classList.add('dragging');
+        setTimeout(() => { if(e.target.parentNode) e.target.remove(); }, 0);
+    }
+    function dropTrash(e) {
+        e.preventDefault();
+        const beach = document.getElementById('beachGame');
+        if (beach.querySelectorAll('.trash').length === 0) {
+            document.getElementById('cleanMsg').innerText = '🎉 رائع! الشاطئ أصبح نظيفاً! السمك فرحان! 🐟';
+            // تغيير الخلفية للشاطئ النظيف (صورة أجمل)
+            beach.style.background = "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 200\"><rect y=\"100\" width=\"400\" height=\"100\" fill=\"%23ffecb3\"/><rect y=\"130\" width=\"400\" height=\"70\" fill=\"%23e0c97f\"/><rect y=\"60\" width=\"400\" height=\"40\" fill=\"%230288d1\"/><rect y=\"0\" width=\"400\" height=\"60\" fill=\"%2300b0ff\"/><circle cx=\"180\" cy=\"30\" r=\"25\" fill=\"%23fff176\"/><text x=\"60\" y=\"180\" font-size=\"30\">🐟🐠🐟</text></svg>') no-repeat center/cover";
+        }
+    }
+    // بدء اللعبة عند التحميل الأول لقسم game
+    document.getElementById('game').addEventListener('transitionend', resetGame); // تشغيل عند الظهور
+    // تحسين: نستدعي resetGame يدوياً مع showSection
+
+    // إعادة ربط drop عند تغيير القسم
+    const originalShow = showSection;
+    showSection = function(id) {
+        originalShow(id);
+        if (id === 'game') resetGame();
+    };
+
+    // تهيئة أولية
+    updateStoryDisplay();
+</script>
+</body>
+</html>
